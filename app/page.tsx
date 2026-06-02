@@ -239,19 +239,25 @@ const gridProducts: GridProduct[] = [
   }
 ];
 
-function Header({ onDemo }: { onDemo: (label: string) => void }) {
+function Header({
+  onDemo,
+  onHome
+}: {
+  onDemo: (label: string) => void;
+  onHome: () => void;
+}) {
   return (
     <header className="sticky top-0 z-40 border-b border-[#eeeeee] bg-white">
       <div className="mx-auto flex h-[72px] max-w-[1560px] items-center px-4 md:h-[92px] md:px-8">
         <button
           type="button"
-          onClick={() => onDemo("홈")}
+          onClick={onHome}
           className="mr-5 text-[25px] font-black tracking-[-0.03em] text-black md:mr-14 md:text-[31px]"
         >
           선물하기
         </button>
         <nav className="hidden items-center gap-9 text-[17px] font-black text-black md:flex">
-          <button type="button" onClick={() => onDemo("홈")}>
+          <button type="button" onClick={onHome}>
             홈
           </button>
           <button type="button" onClick={() => onDemo("위시")}>
@@ -279,7 +285,7 @@ function Header({ onDemo }: { onDemo: (label: string) => void }) {
             onClick={() => onDemo("배송지")}
             className="hidden items-center gap-1 text-[15px] font-medium text-black sm:flex"
           >
-            배송상
+            배준상
             <ChevronDown className="h-4 w-4" aria-hidden="true" />
           </button>
           <button
@@ -803,11 +809,13 @@ function DetailTabsContent() {
 
 function ProductDetailPage({
   product,
+  onHome,
   onOpen,
   onDemo,
   onShare
 }: {
   product: GridProduct;
+  onHome: () => void;
   onOpen: (product: GridProduct) => void;
   onDemo: (label: string) => void;
   onShare: () => void;
@@ -815,6 +823,15 @@ function ProductDetailPage({
   return (
     <main className="mx-auto grid max-w-[1560px] grid-cols-1 gap-0 px-4 md:px-8 lg:grid-cols-[minmax(0,1048px)_360px]">
       <div className="lg:pr-9">
+        <div className="border-b border-[#eeeeee] py-4">
+          <button
+            type="button"
+            onClick={onHome}
+            className="text-[15px] font-bold text-[#777] transition hover:text-black"
+          >
+            ‹ 디딤 브랜드 홈으로 돌아가기
+          </button>
+        </div>
         <ProductSummary product={product} onDemo={onDemo} />
         <BrandRecommendations onOpen={onOpen} />
         <DetailTabsContent />
@@ -842,10 +859,38 @@ export default function Home() {
     toastTimer.current = window.setTimeout(() => setToast(""), 2200);
   }, []);
 
-  const openDetail = useCallback((product: GridProduct) => {
+  const syncProductFromUrl = useCallback(() => {
+    const params = new URLSearchParams(window.location.search);
+    const productId = params.get("product");
+    const product = productId
+      ? gridProducts.find((item) => item.id === productId) ?? null
+      : null;
+
     setDetailProduct(product);
+  }, []);
+
+  const goHome = useCallback(() => {
+    setDetailProduct(null);
+    window.history.pushState({}, "", window.location.pathname);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
+
+  const openDetail = useCallback((product: GridProduct) => {
+    setDetailProduct(product);
+    const params = new URLSearchParams(window.location.search);
+    params.set("product", product.id);
+    window.history.pushState({}, "", `${window.location.pathname}?${params.toString()}`);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
+
+  useEffect(() => {
+    syncProductFromUrl();
+
+    const handlePopState = () => syncProductFromUrl();
+    window.addEventListener("popstate", handlePopState);
+
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [syncProductFromUrl]);
 
   useEffect(() => {
     return () => {
@@ -855,10 +900,11 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-white text-black">
-      <Header onDemo={openDemo} />
+      <Header onDemo={openDemo} onHome={goHome} />
       {detailProduct ? (
         <ProductDetailPage
           product={detailProduct}
+          onHome={goHome}
           onOpen={openDetail}
           onDemo={openDemo}
           onShare={() => showToast("공유 기능은 데모입니다.")}
