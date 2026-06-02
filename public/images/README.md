@@ -1,11 +1,11 @@
-Place the final DIDIM product photos in this folder with these exact filenames:
+Place the DIDIM category mockup photos in this folder with these exact filenames:
 
-- didim-product-main.png
-- didim-night-use.png
-- didim-day-use.png
-- didim-detail-top.png
+- didim-main.png
+- didim-night.png
+- didim-day.png
+- didim-closeup.png
 - didim-package-front.png
 - didim-package-open.png
-- didim-glow-closeup.png
+- didim-top.png
 
-The demo page already points to these paths. If an image is missing, the gallery shows a branded fallback visual instead of a broken image.
+The mockup page already points to these paths. If an image is missing, the UI shows a warm DIDIM placeholder instead of a broken image.
